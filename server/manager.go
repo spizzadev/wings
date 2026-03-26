@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/pterodactyl/wings/remote"
 	"github.com/pterodactyl/wings/server/filesystem"
 )
+
 
 type Manager struct {
 	mu      sync.RWMutex
@@ -204,11 +206,23 @@ func (m *Manager) InitServer(data remote.ServerConfigurationResponse) (*Server, 
 	// Right now we only support a Docker based environment, so I'm going to hard code
 	// this logic in. When we're ready to support other environment we'll need to make
 	// some modifications here, obviously.
+
+	// Build a merged label map: start from panel-defined labels and inject the
+	// mc-router routing label so that mc-router can forward Minecraft connections
+	// to the hostname stored in the server description.
+	labels := make(map[string]string, len(s.cfg.Labels)+1)
+	for k, v := range s.cfg.Labels {
+		labels[k] = v
+	}
+	if host := strings.TrimSpace(s.cfg.Meta.Description); host != "" {
+		labels["mc-router.host"] = host
+	}
+
 	settings := environment.Settings{
 		Mounts:      s.Mounts(),
 		Allocations: s.cfg.Allocations,
 		Limits:      s.cfg.Build,
-		Labels:      s.cfg.Labels,
+		Labels:      labels,
 	}
 
 	envCfg := environment.NewConfiguration(settings, s.GetEnvironmentVariables())
