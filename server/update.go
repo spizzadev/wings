@@ -1,6 +1,7 @@
 package server
 
 import (
+	"strings"
 	"time"
 
 	"github.com/pterodactyl/wings/environment/docker"
@@ -23,12 +24,23 @@ func (s *Server) SyncWithEnvironment() {
 
 	cfg := s.Config()
 
+	// Build a merged label map: start from panel-defined labels and inject the
+	// mc-router routing label so that mc-router can forward Minecraft connections
+	// to the hostname stored in the server description.
+	labels := make(map[string]string, len(cfg.Labels)+1)
+	for k, v := range cfg.Labels {
+		labels[k] = v
+	}
+	if host := strings.TrimSpace(cfg.Meta.Description); host != "" {
+		labels["mc-router.host"] = host
+	}
+
 	// Update the environment settings using the new information from this server.
 	s.Environment.Config().SetSettings(environment.Settings{
 		Mounts:      s.Mounts(),
 		Allocations: cfg.Allocations,
 		Limits:      cfg.Build,
-		Labels:      cfg.Labels,
+		Labels:      labels,
 	})
 
 	// For Docker specific environments we also want to update the configured image
