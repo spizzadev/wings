@@ -34,7 +34,7 @@ func (s *Server) SyncWithEnvironment() {
 	}
 	if host := strings.TrimSpace(cfg.Meta.Description); host != "" {
 		labels["mc-router.host"] = host
-		labels["mc-router.default-server"] = fmt.Sprintf(":%d", cfg.Allocations.DefaultMapping.Port)
+		labels["mc-router.port"] = fmt.Sprintf("%d", cfg.Allocations.DefaultMapping.Port)
 	}
 
 	// Update the environment settings using the new information from this server.
