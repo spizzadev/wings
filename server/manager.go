@@ -216,6 +216,7 @@ func (m *Manager) InitServer(data remote.ServerConfigurationResponse) (*Server, 
 	}
 	if host := strings.TrimSpace(s.cfg.Meta.Description); host != "" {
 		labels["mc-router.host"] = host
+		labels["mc-router.default-server"] = fmt.Sprintf(":%d", s.cfg.Allocations.DefaultMapping.Port)
 	}
 
 	settings := environment.Settings{
